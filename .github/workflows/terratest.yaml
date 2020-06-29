@@ -2,7 +2,7 @@ name: "Test Modules with Terratest"
 on: [pull_request, push]
 
 jobs:
-  kind:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
