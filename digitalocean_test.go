@@ -42,7 +42,6 @@ func TestDigitalOcean(t *testing.T) {
 
 	clusterTFOptions := &terraform.Options{
 		TerraformDir: clusterDir,
-		VarFiles:     []string{"../../terraform.tfvars"},
 	}
 
 	// At the end of the test, run `terraform destroy`
@@ -79,7 +78,6 @@ func TestDigitalOcean(t *testing.T) {
 
 	platformTFOptions := &terraform.Options{
 		TerraformDir: platformDir,
-		VarFiles:     []string{"../../terraform.tfvars"},
 		Vars: map[string]interface{}{
 			"kubernetes":   string(kubernetesJSON),
 			"signing_cert": signingCert,
