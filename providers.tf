@@ -7,8 +7,8 @@ provider "kubernetes" {
     password = lookup(jsondecode(var.kubernetes), "password", null)
     cluster_ca_certificate = lookup(jsondecode(var.kubernetes), "cluster_ca_certificate", null)
     token = lookup(jsondecode(var.kubernetes), "token", null)
-    client_certificate = lookup(var.kubernetes, "client_certificate", null)
-    client_key = lookup(var.kubernetes, "client_key", null)
+    client_certificate = lookup(jsondecode(var.kubernetes), "client_certificate", null)
+    client_key = lookup(jsondecode(var.kubernetes), "client_key", null)
 }
 
 provider "helm" {
@@ -20,8 +20,8 @@ provider "helm" {
     password = lookup(jsondecode(var.kubernetes), "password", null)
     cluster_ca_certificate = lookup(jsondecode(var.kubernetes), "cluster_ca_certificate", null)
     token = lookup(jsondecode(var.kubernetes), "token", null)
-    client_certificate = lookup(var.kubernetes, "client_certificate", null)
-    client_key = lookup(var.kubernetes, "client_key", null)
+    client_certificate = lookup(jsondecode(var.kubernetes), "client_certificate", null)
+    client_key = lookup(jsondecode(var.kubernetes), "client_key", null)
   }
 }
 
