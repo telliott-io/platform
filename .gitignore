@@ -1,5 +1,6 @@
 # Act
 .actrc
+testdata
 
 # Local .terraform directories
 **/.terraform/*
