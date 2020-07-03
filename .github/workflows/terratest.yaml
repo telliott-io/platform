@@ -2,7 +2,7 @@ name: "Test Modules with Terratest"
 on: [pull_request, push]
 
 jobs:
-  test:
+  argocd:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
@@ -10,8 +10,33 @@ jobs:
       with:
         go-version: '^1.14.4' # The Go version to download (if necessary) and use.
     - run: go test ./modules/argocd
-    - run: go test ./modules/secrets
-    - run: go test . --timeout 60m
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14.4' # The Go version to download (if necessary) and use.
+    - run: go test ./modules/secretss
+  digitalocean:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14.4' # The Go version to download (if necessary) and use.
+    - run: go test . --run TestDigitalOcean  --timeout 60m
       env:
         TF_VAR_do_token: ${{ secrets.DigitalOceanToken }}
+        TF_VAR_cluster_name: test-${{ github.run_id }}
+  gke:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14.4' # The Go version to download (if necessary) and use.
+    - run: go test . --run TestGKE  --timeout 60m
+      env:
+        TF_VAR_gcloud_credentials_base64: ${{ secrets.GCloudCredentialsBase64 }}
         TF_VAR_cluster_name: test-${{ github.run_id }}
