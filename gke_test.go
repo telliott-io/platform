@@ -1,25 +1,17 @@
 package platform
 
 import (
-	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/json"
-	"encoding/pem"
 	"io/ioutil"
-	"math/big"
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/telliott-io/platform/testing/testdir"
 )
 
-func TestDigitalOcean(t *testing.T) {
+func TestGKE(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
@@ -35,7 +27,7 @@ func TestDigitalOcean(t *testing.T) {
 	if err := os.Mkdir(clusterDir, os.ModePerm); err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(path.Join(clusterDir, "cluster.tf"), []byte(clusterTF), 0644)
+	err = ioutil.WriteFile(path.Join(clusterDir, "cluster.tf"), []byte(gkeClusterTF), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,17 +83,31 @@ func TestDigitalOcean(t *testing.T) {
 	t.Logf("Platform setup stdout: \n%v", result)
 }
 
-const clusterTF = `
+// fileExists checks if a file exists and is not a directory before we
+// try using it to prevent further errors.
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+const gkeClusterTF = `
 module "cluster" {
-  source   = "github.com/telliott-io/kube-clusters//digitalocean?ref=v0.3.0"
+  source   = "github.com/telliott-io/kube-clusters//gke?ref=v0.3.0"
   cluster_name = var.cluster_name
 }
 
-provider "digitalocean" {
-  token = var.do_token
+provider "google" {
+  credentials = base64decode(var.gcloud_credentials_base64)
+  project     = "telliott-io"
+  region      = "us-central1"
+  zone        = "us-central1-c"
 }
 
-variable "do_token" {}
+variable "gcloud_credentials_base64" {}
+
 variable "cluster_name" {}
 
 output "config" {
@@ -109,67 +115,3 @@ output "config" {
 	sensitive = true
 }
 `
-
-const platformTF = `
-module "platform" {
-	source   = "../../"
-	kubernetes = var.kubernetes
-
-	secret_signing_cert = var.signing_cert
-	secret_signing_key = var.signing_key
-
-	environment = "platform-test"
-
-	hostname = "platform.test"
-
-	argocd_admin_password = "secret"
-
-	bootstrap_repository = "https://telliott-io.github.io/bootstrap"
-	bootstrap_chart = "bootstrap"
-}
-
-variable kubernetes {}
-variable signing_cert {}
-variable signing_key {}
-`
-
-func createCerts() (crt string, key string, err error) {
-	ca := &x509.Certificate{
-		SerialNumber: big.NewInt(2019),
-		Subject: pkix.Name{
-			Organization: []string{"Some Org"},
-		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(10, 0, 0),
-		IsCA:                  false,
-		ExtKeyUsage:           []x509.ExtKeyUsage{},
-		KeyUsage:              x509.KeyUsageDigitalSignature,
-		BasicConstraintsValid: true,
-	}
-	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return "", "", err
-	}
-	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
-	if err != nil {
-		return "", "", err
-	}
-	caPEM := new(bytes.Buffer)
-	err = pem.Encode(caPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: caBytes,
-	})
-	if err != nil {
-		return "", "", err
-	}
-
-	caPrivKeyPEM := new(bytes.Buffer)
-	err = pem.Encode(caPrivKeyPEM, &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
-	})
-	if err != nil {
-		return "", "", err
-	}
-	return string(caPEM.Bytes()), string(caPrivKeyPEM.Bytes()), nil
-}

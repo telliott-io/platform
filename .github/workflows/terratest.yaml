@@ -11,7 +11,7 @@ jobs:
         go-version: '^1.14.4' # The Go version to download (if necessary) and use.
     - run: go test ./modules/argocd
     - run: go test ./modules/secrets
-    - run: go test .
+    - run: go test . --timeout 60m
       env:
         TF_VAR_do_token: ${{ secrets.DigitalOceanToken }}
         TF_VAR_cluster_name: test-${{ github.run_id }}

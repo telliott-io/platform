@@ -6,6 +6,6 @@ resource "null_resource" "verification" {
       module.environment
   ]
   provisioner "local-exec" {
-    command = "go run github.com/telliott-io/infra/cmd/validator --hostname ${var.hostname} --ip ${module.ingress.external_ip}"
+    command = "go run github.com/telliott-io/platform/cmd/validator --hostname ${var.hostname} --ip ${module.ingress.external_ip}"
   }
 }
