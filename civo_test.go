@@ -1,25 +1,17 @@
 package platform
 
 import (
-	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/json"
-	"encoding/pem"
 	"io/ioutil"
-	"math/big"
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/telliott-io/platform/testing/testdir"
 )
 
-func TestDigitalOcean(t *testing.T) {
+func TestCivo(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
@@ -35,8 +27,24 @@ func TestDigitalOcean(t *testing.T) {
 	if err := os.Mkdir(clusterDir, os.ModePerm); err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(path.Join(clusterDir, "cluster.tf"), []byte(clusterTF), 0644)
+	err = ioutil.WriteFile(path.Join(clusterDir, "cluster.tf"), []byte(civoClusterTF), 0644)
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Copy provider
+	if err := os.Mkdir(path.Join(clusterDir, "terraform.d"), os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(path.Join(clusterDir, "terraform.d", "plugins"), os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	providerDir := path.Join(clusterDir, "terraform.d", "plugins", "linux_amd64")
+	if err := os.Mkdir(providerDir, os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := copyFile("terraform-provider-civo", path.Join(providerDir, "terraform-provider-civo")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -56,6 +64,7 @@ func TestDigitalOcean(t *testing.T) {
 	// Run `terraform init` and `terraform apply`
 	result := terraform.InitAndApply(t, clusterTFOptions)
 	config := terraform.OutputMap(t, clusterTFOptions, "config")
+	dnsName := terraform.Output(t, clusterTFOptions, "dns_name")
 	t.Logf("Cluster creation stdout: \n%v", result)
 
 	platformDir := path.Join(workingDir, "platform")
@@ -81,6 +90,7 @@ func TestDigitalOcean(t *testing.T) {
 		TerraformDir: platformDir,
 		Vars: map[string]interface{}{
 			"kubernetes":   string(kubernetesJSON),
+			"dns_name":     dnsName,
 			"signing_cert": signingCert,
 			"signing_key":  signingKey,
 		},
@@ -91,91 +101,45 @@ func TestDigitalOcean(t *testing.T) {
 	t.Logf("Platform setup stdout: \n%v", result)
 }
 
-const clusterTF = `
+func copyFile(src, dst string) error {
+	content, err := ioutil.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(dst, content, os.ModePerm); err != nil {
+		return err
+	}
+	si, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	if err := os.Chmod(dst, si.Mode()); err != nil {
+		return err
+	}
+	return nil
+}
+
+const civoClusterTF = `
 module "cluster" {
-  source   = "github.com/telliott-io/kube-clusters//digitalocean?ref=v0.3.0"
+  source   = "github.com/telliott-io/kube-clusters//civo?ref=v0.4.0"
   cluster_name = var.cluster_name
 }
 
-provider "digitalocean" {
-  token = var.do_token
+provider "civo" {
+  token = var.civo_api_key
 }
 
-variable "do_token" {}
+variable "civo_api_key" {
+}
+
 variable "cluster_name" {}
 
 output "config" {
 	value = module.cluster.kubernetes
 	sensitive = true
 }
-`
 
-const platformTF = `
-module "platform" {
-	source   = "../../"
-	kubernetes = var.kubernetes
-
-	secret_signing_cert = var.signing_cert
-	secret_signing_key = var.signing_key
-
-	environment = "platform-test"
-
-	hostname = "platform.test"
-
-	argocd_admin_password = "secret"
-
-	bootstrap_repository = "https://telliott-io.github.io/bootstrap"
-	bootstrap_chart = "bootstrap"
-
-	dns_name = var.dns_name
-}
-
-variable kubernetes {}
-variable signing_cert {}
-variable signing_key {}
-
-variable dns_name {
-	default = null
+output "dns_name" {
+	value = module.cluster.dns_name
 }
 `
-
-func createCerts() (crt string, key string, err error) {
-	ca := &x509.Certificate{
-		SerialNumber: big.NewInt(2019),
-		Subject: pkix.Name{
-			Organization: []string{"Some Org"},
-		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(10, 0, 0),
-		IsCA:                  false,
-		ExtKeyUsage:           []x509.ExtKeyUsage{},
-		KeyUsage:              x509.KeyUsageDigitalSignature,
-		BasicConstraintsValid: true,
-	}
-	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return "", "", err
-	}
-	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
-	if err != nil {
-		return "", "", err
-	}
-	caPEM := new(bytes.Buffer)
-	err = pem.Encode(caPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: caBytes,
-	})
-	if err != nil {
-		return "", "", err
-	}
-
-	caPrivKeyPEM := new(bytes.Buffer)
-	err = pem.Encode(caPrivKeyPEM, &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
-	})
-	if err != nil {
-		return "", "", err
-	}
-	return string(caPEM.Bytes()), string(caPrivKeyPEM.Bytes()), nil
-}

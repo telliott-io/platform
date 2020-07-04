@@ -2,6 +2,9 @@
 .actrc
 testdata
 
+# Civo terraform provider
+terraform-provider-civo
+
 # Local .terraform directories
 **/.terraform/*
 
