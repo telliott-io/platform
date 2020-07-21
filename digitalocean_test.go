@@ -124,8 +124,8 @@ module "platform" {
 
 	argocd_admin_password = "secret"
 
-	bootstrap_repository = "https://telliott-io.github.io/bootstrap"
-	bootstrap_chart = "bootstrap"
+	bootstrap_repository = ""
+	bootstrap_chart = "../testing/testbootstrap"
 
 	dns_name = var.dns_name
 }
