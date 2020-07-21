@@ -125,7 +125,7 @@ module "platform" {
 	argocd_admin_password = "secret"
 
 	bootstrap_repository = ""
-	bootstrap_chart = "../testing/testbootstrap"
+	bootstrap_chart = "../../testing/testbootstrap"
 
 	dns_name = var.dns_name
 }
