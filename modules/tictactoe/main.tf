@@ -4,6 +4,7 @@ resource "helm_release" "tictactoe" {
   chart      = "tic-tac-toe"
   namespace  = "tictactoe"
   version    = "v0.1.27"
+  create_namespace = true
 
   set {
     name = "hostname"
