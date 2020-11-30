@@ -23,8 +23,3 @@ module "environment" {
   }
   hostname = var.hostname
 }
-
-module "tictactoe" {
-  source   = "./modules/tictactoe"
-  hostname = var.hostname
-}
