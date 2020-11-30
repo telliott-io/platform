@@ -28,7 +28,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: 0.12.5
+        terraform_version: 0.12.26
     - run: go test . --run TestDigitalOcean -v --timeout 60m
       env:
         TF_VAR_do_token: ${{ secrets.DigitalOceanToken }}
@@ -43,7 +43,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: 0.12.5
+        terraform_version: 0.12.26
     - run: go test . --run TestGKE -v --timeout 60m
       env:
         TF_VAR_gcloud_credentials_base64: ${{ secrets.GCloudCredentialsBase64 }}
@@ -58,7 +58,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: 0.12.5
+        terraform_version: 0.12.26
     - name: Download test dependencies
       uses: teddyking/dependency-action@master
       with:
