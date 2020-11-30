@@ -1,7 +1,7 @@
 resource "helm_release" "tictactoe" {
   name       = "tictactoe"
   repository = "https://theothertomelliott.github.io/tic-tac-toverengineered/"
-  chart      = "tictactoe"
+  chart      = "tic-tac-toe"
   namespace  = "tictactoe"
   version    = "v0.1.27"
 
