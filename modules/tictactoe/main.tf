@@ -8,7 +8,7 @@ resource "helm_release" "tictactoe" {
 
   set {
     name = "hostname"
-    value = var.hostname
+    value = "tictactoe.${var.hostname}"
     type = "string"
   }
 
