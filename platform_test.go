@@ -1,4 +1,4 @@
-package secrets
+package argocd
 
 import (
 	"bytes"
@@ -6,23 +6,16 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/big"
-	"os"
-	"os/exec"
 	"path"
 	"strings"
 	"testing"
 	"time"
-
-	// Register Auth providers
 
 	sealedsecrets "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -30,12 +23,11 @@ import (
 	"github.com/telliott-io/platform/testing/testdir"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/deprecated/scheme"
 	"k8s.io/client-go/util/cert"
 )
 
-func TestSigning(t *testing.T) {
+func TestPlatform(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
@@ -53,7 +45,7 @@ func TestSigning(t *testing.T) {
 	}
 
 	kubeconfigfile := "kindconfig"
-	kindCleanup, err := kind.New("test-kind", path.Join(tfdir, kubeconfigfile))
+	kindCleanup, err := kind.New("platform-test-kind", path.Join(tfdir, kubeconfigfile))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,76 +60,28 @@ func TestSigning(t *testing.T) {
 		// The path to where your Terraform code is located
 		TerraformDir: tfdir,
 		Vars: map[string]interface{}{
-			"signing_cert": signingCert,
-			"signing_key":  signingKey,
+			"secret_signing_cert": signingCert,
+			"secret_signing_key":  signingKey,
 		},
 	}
 
 	// At the end of the test, run `terraform destroy`
-	// TODO: Determine why this doesn't work
-	// defer terraform.Destroy(t, terraformOptions)
+	defer terraform.Destroy(t, terraformOptions)
 
 	// Run `terraform init` and `terraform apply`
 	result := terraform.InitAndApply(t, terraformOptions)
 	t.Logf("Stdout: %v", result)
 
-	ss, err := sealTestSecret(signingCert)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ss.APIVersion = "bitnami.com/v1alpha1"
-	ss.Kind = "SealedSecret"
-	ssJSON, err := json.Marshal(ss)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sealedSecretFile := "secret.json"
-	sealedSecretPath := path.Join(tfdir, sealedSecretFile)
-	err = ioutil.WriteFile(sealedSecretPath, ssJSON, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		err := os.Remove(sealedSecretPath)
-		if err != nil {
-			t.Log(err)
-		}
-	}()
-
-	// Create secret
-	output, err := execKubectl(tfdir, kubeconfigfile, []string{"apply", "-f", sealedSecretFile})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Sleep for 1s
-	time.Sleep(time.Second)
-
-	// Get new secret value
-	output, err = execKubectl(tfdir, kubeconfigfile, []string{"get", "secret", "mysecret", "-o", "jsonpath=\"{.data.foo}\""})
-	if err != nil {
-		t.Log(output)
-		t.Fatal(err)
-	}
-	encoded := strings.Replace(string(output), "\"", "", 2)
-	data, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		t.Error(err)
-	}
-	if string(data) != secretValue {
-		t.Errorf("generated secret incorrect. expected %q, got %q", secretValue, string(data))
-	}
 }
 
-func execKubectl(tfdir, kubeconfigfile string, params []string) (string, error) {
-	cmd := exec.Command("kubectl", params...)
-	cmd.Env = []string{
-		fmt.Sprintf("KUBECONFIG=%s", kubeconfigfile),
-	}
-	cmd.Dir = tfdir
-	output, err := cmd.CombinedOutput()
-	return string(output), err
+var secretObj = &v1.Secret{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "mysecret",
+		Namespace: "default",
+	},
+	Data: map[string][]byte{
+		"foo": []byte(secretValue),
+	},
 }
 
 func sealTestSecret(signingCert string) (*sealedsecrets.SealedSecret, error) {
@@ -216,32 +160,18 @@ func createCerts() (crt string, key string, err error) {
 const secretValue = "bar"
 
 const mainTF = `
-module "secrets" {
-    source = "../"
-    signing_cert = var.signing_cert
-    signing_key = var.signing_key
+module "platform" {
+	source = "../"
+	kubernetes = "{\"config_path\": \"${path.module}/kindconfig\"}"
+	environment = "platform-test-1"
+	hostname = "example.com"
+	argocd_admin_password = "secret"
+	secret_signing_cert = var.secret_signing_cert
+    secret_signing_key = var.secret_signing_key
+	bootstrap_repository = "https://telliott-io.github.io/bootstrap"
+	bootstrap_chart = "bootstrap"
 }
 
-provider "kubernetes" {
-    config_path = "${path.module}/kindconfig"
-}
-
-provider "helm" {
-    kubernetes {
-        config_path = "${path.module}/kindconfig"
-    }
-}
-
-variable signing_cert {}
-variable signing_key {}
+variable secret_signing_cert {}
+variable secret_signing_key {}
 `
-
-var secretObj = &v1.Secret{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "mysecret",
-		Namespace: "default",
-	},
-	Data: map[string][]byte{
-		"foo": []byte(secretValue),
-	},
-}

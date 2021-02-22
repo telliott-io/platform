@@ -49,5 +49,5 @@ data "kubernetes_service" "ingress_nginx" {
 }
 
 output external_ip {
-  value = data.kubernetes_service.ingress_nginx.load_balancer_ingress.0.ip
+  value = data.kubernetes_service.ingress_nginx.status.0.load_balancer.0.ingress.0.ip
 }

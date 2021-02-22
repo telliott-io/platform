@@ -12,7 +12,6 @@ provider "kubernetes" {
 
 provider "helm" {
   kubernetes {
-    load_config_file = lookup(jsondecode(var.kubernetes), "load_config_file", false)
     config_path = lookup(jsondecode(var.kubernetes), "config_path", null)
     host     = lookup(jsondecode(var.kubernetes), "host", null)
     username = lookup(jsondecode(var.kubernetes), "username", null)

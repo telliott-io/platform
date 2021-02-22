@@ -3,6 +3,7 @@ module github.com/telliott-io/platform
 go 1.14
 
 require (
+	code.soquee.net/testlog v0.0.1
 	github.com/bitnami-labs/sealed-secrets v0.12.4
 	github.com/gruntwork-io/terratest v0.28.7
 	gopkg.in/yaml.v2 v2.3.0 // indirect
