@@ -1,5 +1,9 @@
 name: "Test Modules with Terratest"
-on: [pull_request, push]
+on: 
+  pull_request:
+  push:
+  schedule:
+  - cron: "0 21 * * 5" # Run at 11pm every Friday for weekend fixes
 
 jobs:
   argocd:
@@ -18,57 +22,3 @@ jobs:
       with:
         go-version: '^1.14.4' # The Go version to download (if necessary) and use.
     - run: go test ./modules/secrets
-  digitalocean:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '^1.14.4' # The Go version to download (if necessary) and use.
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 0.12.26
-    - run: go test . --run TestDigitalOcean -v --timeout 60m
-      env:
-        TF_VAR_do_token: ${{ secrets.DigitalOceanToken }}
-        TF_VAR_cluster_name: test-${{ github.run_id }}
-  gke:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '^1.14.4' # The Go version to download (if necessary) and use.
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 0.12.26
-    - run: go test . --run TestGKE -v --timeout 60m
-      env:
-        TF_VAR_gcloud_credentials_base64: ${{ secrets.GCloudCredentialsBase64 }}
-        TF_VAR_cluster_name: test-${{ github.run_id }}
-  civo:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '^1.14.4' # The Go version to download (if necessary) and use.
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 0.12.26
-    - name: Download test dependencies
-      uses: teddyking/dependency-action@master
-      with:
-        deps: https://github.com/civo/terraform-provider-civo/releases/download/v0.9.5/terraform-provider-civo_0.9.5_linux_amd64.tar.gz 
-    - name: copy Civo provider
-      uses: canastro/copy-file-action@master
-      with:
-        source: "/github/home/terraform-provider-civo"
-        target: "terraform-provider-civo"
-    - run: go test . --run TestCivo -v --timeout 60m
-      env:
-        TF_VAR_civo_api_key: ${{ secrets.CivoApiKey }}
-        TF_VAR_cluster_name: test-${{ github.run_id }}
