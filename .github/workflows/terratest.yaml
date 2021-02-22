@@ -29,4 +29,4 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: '^1.14.4' # The Go version to download (if necessary) and use.
-    - run: go test -v .
+    - run: go test -v -timeout 1h .
