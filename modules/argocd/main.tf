@@ -1,5 +1,17 @@
-resource "helm_release" "argocd" {
+terraform {
+  required_providers {
+    helm = {
+      source = "hashicorp/helm"
+      version = "2.0.2"
+    }
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+      version = "2.0.2"
+    }
+  }
+}
 
+resource "helm_release" "argocd" {
   name       = "argo"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"

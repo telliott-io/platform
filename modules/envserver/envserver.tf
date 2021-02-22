@@ -1,3 +1,13 @@
+terraform {
+  required_providers {
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+      version = "2.0.2"
+    }
+  }
+}
+
+
 resource "kubernetes_deployment" "envserver" {
   depends_on = [kubernetes_namespace.environment, kubernetes_config_map.environment]
 
