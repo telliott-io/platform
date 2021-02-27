@@ -5,5 +5,5 @@ resource "helm_release" "bootstrap" {
   repository = var.bootstrap_repository
   chart      = var.bootstrap_chart
   namespace  = "argocd"
-  version    = "0.1.3"
+  version    = var.bootstrap_version
 }

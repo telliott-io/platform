@@ -53,8 +53,9 @@ const mainTF = `
 module "argocd" {
 	source = "../"
 	argocd_admin_password = "secret"
-	bootstrap_repository = "https://telliott-io.github.io/bootstrap"
+	bootstrap_repository = "https://telliott-io.github.io/testbootstrap"
 	bootstrap_chart = "bootstrap"
+	bootstrap_version = "0.1.1"
 }
 
 provider "kubernetes" {
