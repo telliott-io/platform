@@ -92,8 +92,17 @@ func TestDigitalOcean(t *testing.T) {
 }
 
 const clusterTF = `
+terraform {
+  required_providers {
+    digitalocean = {
+      source = "digitalocean/digitalocean"
+      version = "2.5.1"
+    }
+  }
+}
+
 module "cluster" {
-  source   = "github.com/telliott-io/kube-clusters//digitalocean?ref=v0.5.0"
+  source   = "github.com/telliott-io/kube-clusters//digitalocean?ref=v0.6.1"
   cluster_name = var.cluster_name
 }
 provider "digitalocean" {
