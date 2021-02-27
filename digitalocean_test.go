@@ -93,7 +93,7 @@ func TestDigitalOcean(t *testing.T) {
 
 const clusterTF = `
 module "cluster" {
-  source   = "github.com/telliott-io/kube-clusters//digitalocean?ref=v0.3.0"
+  source   = "github.com/telliott-io/kube-clusters//digitalocean?ref=v0.5.0"
   cluster_name = var.cluster_name
 }
 provider "digitalocean" {
@@ -121,6 +121,7 @@ module "platform" {
 	bootstrap_version = "0.1.1"
 	dns_name = var.dns_name
 }
+
 variable kubernetes {}
 variable signing_cert {}
 variable signing_key {}
