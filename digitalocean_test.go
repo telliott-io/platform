@@ -1,19 +1,11 @@
 package platform
 
 import (
-	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/json"
-	"encoding/pem"
 	"io/ioutil"
-	"math/big"
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/telliott-io/platform/testing/testdir"
@@ -40,14 +32,8 @@ func TestDigitalOcean(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	varFiles := []string{}
-	if fileExists("terraform.tfvars") {
-		varFiles = []string{"../../terraform.tfvars"}
-	}
-
 	clusterTFOptions := &terraform.Options{
 		TerraformDir: clusterDir,
-		VarFiles:     varFiles,
 	}
 
 	// At the end of the test, run `terraform destroy`
@@ -72,17 +58,10 @@ func TestDigitalOcean(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	signingCert, signingKey, err := createCerts()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	platformTFOptions := &terraform.Options{
 		TerraformDir: platformDir,
 		Vars: map[string]interface{}{
-			"kubernetes":   string(kubernetesJSON),
-			"signing_cert": signingCert,
-			"signing_key":  signingKey,
+			"kubernetes": string(kubernetesJSON),
 		},
 	}
 
@@ -120,8 +99,6 @@ const platformTF = `
 module "platform" {
 	source   = "../../"
 	kubernetes = var.kubernetes
-	secret_signing_cert = var.signing_cert
-	secret_signing_key = var.signing_key
 	environment = "platform-test"
 	hostname = "platform.test"
 	argocd_admin_password = "secret"
@@ -132,60 +109,8 @@ module "platform" {
 }
 
 variable kubernetes {}
-variable signing_cert {}
-variable signing_key {}
+
 variable dns_name {
 	default = null
 }
 `
-
-func createCerts() (crt string, key string, err error) {
-	ca := &x509.Certificate{
-		SerialNumber: big.NewInt(2019),
-		Subject: pkix.Name{
-			Organization: []string{"Some Org"},
-		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(10, 0, 0),
-		IsCA:                  false,
-		ExtKeyUsage:           []x509.ExtKeyUsage{},
-		KeyUsage:              x509.KeyUsageDigitalSignature,
-		BasicConstraintsValid: true,
-	}
-	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return "", "", err
-	}
-	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
-	if err != nil {
-		return "", "", err
-	}
-	caPEM := new(bytes.Buffer)
-	err = pem.Encode(caPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: caBytes,
-	})
-	if err != nil {
-		return "", "", err
-	}
-
-	caPrivKeyPEM := new(bytes.Buffer)
-	err = pem.Encode(caPrivKeyPEM, &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
-	})
-	if err != nil {
-		return "", "", err
-	}
-	return string(caPEM.Bytes()), string(caPrivKeyPEM.Bytes()), nil
-}
-
-// fileExists checks if a file exists and is not a directory before we
-// try using it to prevent further errors.
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
