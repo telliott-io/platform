@@ -1,17 +1,29 @@
-# Environment name for environment endpoint
-variable environment {}
+variable environment {
+    type = string
+    description = "Environment name, output by the /environment endpoint as a way to uniquely identify this cluster."
+}
 
-# Hostname for ingress
-variable hostname {}
+variable hostname {
+    type = string
+    description = "Base hostname for ingresses."
+}
 
-# Admin passwod for accessing argo
-variable argocd_admin_password {}
+variable argocd_admin_password {
+    type = string
+    description = "Admin password for accessing ArgoCD."
+}
 
-# Helm chart for bootstrap ArgoCD application
-variable bootstrap_repository {}
-variable bootstrap_chart {}
-variable bootstrap_version {}
+variable bootstrap_repository {
+    type = string
+    description = "Helm repository for application bootstrapped into ArgoCD."
+}
 
-variable dns_name {
-    default = null
+variable bootstrap_chart {
+    type = string
+    description = "Helm chart for application bootstrapped into ArgoCD."    
+}
+
+variable bootstrap_version {
+    type = string
+    description = "Helm chart version for application bootstrapped into ArgoCD."      
 }

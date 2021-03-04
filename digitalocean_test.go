@@ -105,12 +105,7 @@ module "platform" {
 	bootstrap_repository = "https://telliott-io.github.io/testbootstrap"
 	bootstrap_chart = "bootstrap"
 	bootstrap_version = "0.1.1"
-	dns_name = var.dns_name
 }
 
 variable kubernetes {}
-
-variable dns_name {
-	default = null
-}
 `
