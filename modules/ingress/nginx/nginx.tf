@@ -264,7 +264,7 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
       spec {
         container {
           name  = "nginx-ingress-controller"
-          image = "quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.1"
+          image = "quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.33.0"
           args  = [
               "/nginx-ingress-controller", 
               "--configmap=$(POD_NAMESPACE)/nginx-configuration", 
