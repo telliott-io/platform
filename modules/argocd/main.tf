@@ -17,7 +17,7 @@ resource "helm_release" "argocd" {
   chart      = "argo-cd"
   namespace  = "argocd"
   create_namespace = true
-  version    = "2.3.4"
+  version    = "5.5.24"
 
   set_sensitive {
     name  = "configs.secret.argocdServerAdminPassword"
