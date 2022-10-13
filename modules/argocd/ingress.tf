@@ -1,4 +1,4 @@
-resource "kubernetes_ingress" "argocd" {
+resource "kubernetes_ingress_v1" "argocd" {
   depends_on = [helm_release.argocd]
 
   metadata {
@@ -22,8 +22,12 @@ resource "kubernetes_ingress" "argocd" {
           path = "/"
 
           backend {
-            service_name = "argo-argocd-server"
-            service_port = "https"
+            service {
+              name = "argo-argocd-server"
+              port {
+                name = "https"
+              }
+            }
           }
         }
       }

@@ -1,4 +1,4 @@
-resource "kubernetes_ingress" "envserver" {
+resource "kubernetes_ingress_v1" "envserver" {
   depends_on = [
     kubernetes_deployment.envserver,
   ]
@@ -16,8 +16,12 @@ resource "kubernetes_ingress" "envserver" {
           path = "/environment"
 
           backend {
-            service_name = "envserver"
-            service_port = "http"
+            service {
+              name = "envserver"
+              port {
+                name = "http"
+              }
+            }
           }
         }
       }
