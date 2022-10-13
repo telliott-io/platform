@@ -2,8 +2,8 @@ name: "Test Modules with Terratest"
 on: 
   pull_request:
   push:
-  schedule:
-  - cron: "0 21 * * 5" # Run at 11pm every Friday for weekend fixes
+  # schedule:
+  # - cron: "0 21 * * 5" # Run at 11pm every Friday for weekend fixes
 
 env:
   tf_version: '0.13.6'
