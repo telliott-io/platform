@@ -19,7 +19,7 @@ func New(name, kubeConfigPath string) (cleanup func() error, err error) {
 	)
 	err = kindProvider.Create(
 		name,
-		cluster.CreateWithNodeImage("kindest/node:v1.16.9"),
+		cluster.CreateWithNodeImage("kindest/node:v1.22.13"),
 		cluster.CreateWithRetain(false),
 		cluster.CreateWithWaitForReady(time.Duration(0)),
 		cluster.CreateWithKubeconfigPath(kubeConfigPath),
