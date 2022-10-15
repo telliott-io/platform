@@ -31,6 +31,10 @@ resource "kubernetes_config_map" "nginx_configuration" {
       "app.kubernetes.io/part-of" = "ingress-nginx"
     }
   }
+
+  data = {
+    "error-log-level" = "debug"
+  }
 }
 
 resource "kubernetes_config_map" "tcp_services" {
@@ -75,56 +79,6 @@ resource "kubernetes_service_account" "nginx_ingress_serviceaccount" {
 
       "app.kubernetes.io/part-of" = "ingress-nginx"
     }
-  }
-}
-
-resource "kubernetes_cluster_role" "nginx_ingress_clusterrole" {
-  depends_on = [kubernetes_namespace.ingress_nginx]
-
-  metadata {
-    name = "nginx-ingress-clusterrole"
-
-    labels = {
-      "app.kubernetes.io/name" = "ingress-nginx"
-
-      "app.kubernetes.io/part-of" = "ingress-nginx"
-    }
-  }
-
-  rule {
-    verbs      = ["list", "watch"]
-    api_groups = [""]
-    resources  = ["configmaps", "endpoints", "nodes", "pods", "secrets"]
-  }
-
-  rule {
-    verbs      = ["get"]
-    api_groups = [""]
-    resources  = ["nodes"]
-  }
-
-  rule {
-    verbs      = ["get", "list", "watch"]
-    api_groups = [""]
-    resources  = ["services"]
-  }
-
-  rule {
-    verbs      = ["create", "patch"]
-    api_groups = [""]
-    resources  = ["events"]
-  }
-
-  rule {
-    verbs      = ["get", "list", "watch"]
-    api_groups = ["extensions", "networking.k8s.io"]
-    resources  = ["ingresses","ingressclasses"]
-  }
-
-  rule {
-    verbs      = ["update"]
-    api_groups = ["extensions", "networking.k8s.io"]
-    resources  = ["ingresses/status"]
   }
 }
 
@@ -222,7 +176,7 @@ resource "kubernetes_cluster_role_binding" "nginx_ingress_clusterrole_nisa_bindi
 }
 
 resource "kubernetes_deployment" "nginx_ingress_controller" {
-  depends_on = [kubernetes_namespace.ingress_nginx]
+  depends_on = [kubernetes_config_map.nginx_configuration]
 
   metadata {
     name      = "nginx-ingress-controller"
@@ -271,16 +225,18 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
 
         container {
           name  = "nginx-ingress-controller"
-          image = "nginx/nginx-ingress:2.1.0"
+          image = "nginx/nginx-ingress:2.4.0"
+          
           args  = [
-              "/nginx-ingress-controller", 
-              "--configmap=$(POD_NAMESPACE)/nginx-configuration", 
-              "--tcp-services-configmap=$(POD_NAMESPACE)/tcp-services", 
-              "--udp-services-configmap=$(POD_NAMESPACE)/udp-services", 
-              "--publish-service=$(POD_NAMESPACE)/ingress-nginx", 
-              "--annotations-prefix=nginx.ingress.kubernetes.io",
-              "--enable-ssl-passthrough"
-            ]
+            #"-nginx-configmaps=$(POD_NAMESPACE)/nginx-configuration",
+            #"-default-server-tls-secret=$(POD_NAMESPACE)/default-server-secret",
+            "-enable-custom-resources=false", 
+            "-ingress-class=nginx",
+            "-nginx-debug"
+            #"-publish-service=$(POD_NAMESPACE)/ingress-nginx", 
+            #"-annotations-prefix=nginx.ingress.kubernetes.io",
+            #"-enable-tls-passthrough"
+          ]
 
           port {
             name           = "http"
