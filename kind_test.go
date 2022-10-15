@@ -1,4 +1,4 @@
-package argocd
+package platform
 
 import (
 	"io/ioutil"
@@ -10,7 +10,7 @@ import (
 	"github.com/telliott-io/platform/testing/testdir"
 )
 
-func TestSigning(t *testing.T) {
+func TestWithKind(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
@@ -22,7 +22,7 @@ func TestSigning(t *testing.T) {
 	}
 	defer workingDirCleanup()
 
-	err = ioutil.WriteFile(path.Join(tfdir, "main.tf"), []byte(mainTF), 0644)
+	err = ioutil.WriteFile(path.Join(tfdir, "main.tf"), []byte(kindPlatformTF), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,23 +52,17 @@ func TestSigning(t *testing.T) {
 
 }
 
-const mainTF = `
-module "argocd" {
-	source = "../"
+const kindPlatformTF = `
+module "platform" {
+	source   = "../"
+	kubernetes = "{\"config_path\": \"${path.module}/kindconfig\"}"
+	environment = "platform-test"
+	hostname = "platform.test"
 	argocd_admin_password = "secret"
 	bootstrap_repository = "https://telliott-io.github.io/testbootstrap"
 	bootstrap_chart = "bootstrap"
 	bootstrap_version = "0.1.1"
-}
 
-provider "kubernetes" {
-    config_path = "${path.module}/kindconfig"
-}
-
-provider "helm" {
-    kubernetes {
-        config_path = "${path.module}/kindconfig"
-    }
 	debug = true
 }
 `

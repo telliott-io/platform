@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cmd"
@@ -20,11 +19,7 @@ func New(name, kubeConfigPath string) (cleanup func() error, err error) {
 	err = kindProvider.Create(
 		name,
 		cluster.CreateWithNodeImage("kindest/node:v1.22.13"),
-		cluster.CreateWithRetain(false),
-		cluster.CreateWithWaitForReady(time.Duration(0)),
 		cluster.CreateWithKubeconfigPath(kubeConfigPath),
-		cluster.CreateWithDisplayUsage(true),
-		cluster.CreateWithDisplaySalutation(true),
 	)
 	if err != nil {
 		return nil, err

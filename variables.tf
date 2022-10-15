@@ -27,3 +27,9 @@ variable bootstrap_version {
     type = string
     description = "Helm chart version for application bootstrapped into ArgoCD."      
 }
+
+variable debug {
+    type = bool
+    description = "If true, output debug information from Helm charts (visible if TF_LOG=debug or trace)."
+    default = false
+}

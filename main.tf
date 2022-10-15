@@ -1,6 +1,6 @@
 
 module "ingress" {
-  source   = "./modules/ingress/nginx"
+  source   = "./modules/ingress/traefik"
 }
 
 module "cd" {

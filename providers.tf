@@ -21,6 +21,7 @@ provider "helm" {
     client_certificate = lookup(jsondecode(var.kubernetes), "client_certificate", null)
     client_key = lookup(jsondecode(var.kubernetes), "client_key", null)
   }
+  debug = var.debug
 }
 
 variable kubernetes {}
