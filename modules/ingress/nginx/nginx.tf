@@ -118,7 +118,7 @@ resource "kubernetes_cluster_role" "nginx_ingress_clusterrole" {
   rule {
     verbs      = ["get", "list", "watch"]
     api_groups = ["extensions", "networking.k8s.io"]
-    resources  = ["ingresses"]
+    resources  = ["ingresses","ingressclasses"]
   }
 
   rule {
@@ -262,9 +262,16 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
       }
 
       spec {
+        security_context {
+          sysctl {
+            name = "net.ipv4.ip_unprivileged_port_start"
+            value = "1"
+          }
+        }
+
         container {
           name  = "nginx-ingress-controller"
-          image = "quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.33.0"
+          image = "nginx/nginx-ingress:2.1.0"
           args  = [
               "/nginx-ingress-controller", 
               "--configmap=$(POD_NAMESPACE)/nginx-configuration", 
@@ -338,11 +345,6 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
                 command = ["/wait-shutdown"]
               }
             }
-          }
-
-          security_context {
-            run_as_user                = 33
-            allow_privilege_escalation = true
           }
         }
 
