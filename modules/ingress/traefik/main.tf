@@ -31,4 +31,12 @@ resource "helm_release" "traefik" {
     name = "service.type"
     value = var.service_type
   }
+
+  dynamic "set" {
+    for_each = (var.service_type == "NodePort") ? ["32080"] : []
+    content {
+      name = "ports.web.nodePort"
+      value = set.value
+    }
+  }
 }
