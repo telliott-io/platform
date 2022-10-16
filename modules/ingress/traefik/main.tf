@@ -18,6 +18,7 @@ resource "helm_release" "traefik" {
   namespace  = "traefik"
   create_namespace = true
   version    = "v15.1.0"
+  timeout = "600"
 
   dynamic "set" {
     for_each = (var.load_balancer_ip != null) ? [var.load_balancer_ip] : []

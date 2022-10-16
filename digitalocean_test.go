@@ -35,9 +35,6 @@ func TestDigitalOcean(t *testing.T) {
 
 	clusterTFOptions := &terraform.Options{
 		TerraformDir: clusterDir,
-		// EnvVars: map[string]string{
-		// 	"TF_LOG": "debug",
-		// },
 	}
 
 	// At the end of the test, run `terraform destroy`
@@ -115,4 +112,8 @@ module "platform" {
 }
 
 variable kubernetes {}
+
+output "ingress_address" {
+    value = module.platform.ingress_address
+}
 `

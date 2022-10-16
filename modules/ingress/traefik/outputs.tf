@@ -1,12 +1,9 @@
 data "kubernetes_service" "ingress_traefik" {
+  depends_on = [helm_release.traefik]
   metadata {
-    name      = "traefik"
+    name      = "traefikingress"
     namespace = "traefik"
   }
-
-  depends_on = [
-    helm_release.traefik,
-  ]
 }
 
 output external_ip {
