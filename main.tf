@@ -1,6 +1,8 @@
 
 module "ingress" {
   source   = "./modules/ingress/traefik"
+  load_balancer_ip = var.load_balancer_ip
+  service_type = var.service_type
 }
 
 module "cd" {

@@ -64,5 +64,6 @@ module "platform" {
 	bootstrap_version = "0.1.1"
 
 	debug = true
+	service_type = "NodePort"
 }
 `
