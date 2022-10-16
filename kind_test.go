@@ -48,7 +48,7 @@ func TestWithKind(t *testing.T) {
 	// Run `terraform init` and `terraform apply`
 	_ = terraform.InitAndApply(t, terraformOptions)
 
-	checkEnvironmentHost(t, "http://localhost:32080", "localhost", "platform-test")
+	checkEnvironmentHost(t, "http://localhost:32080", "platform.test", "platform-test")
 }
 
 const kindPlatformTF = `
@@ -56,7 +56,7 @@ module "platform" {
 	source   = "../"
 	kubernetes = "{\"config_path\": \"${path.module}/kindconfig\"}"
 	environment = "platform-test"
-	hostname = "localhost"
+	hostname = "platform.test"
 	argocd_admin_password = "secret"
 	bootstrap_repository = "https://telliott-io.github.io/testbootstrap"
 	bootstrap_chart = "bootstrap"

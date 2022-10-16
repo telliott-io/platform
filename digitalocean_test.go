@@ -2,6 +2,7 @@ package platform
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -71,6 +72,9 @@ func TestDigitalOcean(t *testing.T) {
 	// Run `terraform init` and `terraform apply`
 	result = terraform.InitAndApply(t, platformTFOptions)
 	t.Logf("Platform setup stdout: \n%v", result)
+
+	address := terraform.Output(t, platformTFOptions, "ingress_address")
+	checkEnvironmentHost(t, fmt.Sprintf("http://%v", address), "platform.test", "platform-test")
 }
 
 const clusterTF = `

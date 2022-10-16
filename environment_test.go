@@ -16,7 +16,9 @@ type EnvironmentData struct {
 // checkEnvironmentHost verifies that the environment ingress returns the expected
 // environment name.
 func checkEnvironmentHost(t *testing.T, host string, hostHeader string, expectedPlatform string) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%v/environment", host), nil)
+	url := fmt.Sprintf("%v/environment", host)
+	t.Logf("Checking environment output at %q with host header %q", url, hostHeader)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
