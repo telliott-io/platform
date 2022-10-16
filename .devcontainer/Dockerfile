@@ -8,6 +8,14 @@ FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
 ARG NODE_VERSION="none"
 RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
+RUN apt-get update
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
 # Setup for Kubectl install
 # See https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
 RUN curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
@@ -21,7 +29,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/h
 
 # Install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends ca-certificates curl helm kubectl
+    && apt-get -y install --no-install-recommends \
+    helm \
+    kubectl
 
 # Use go get to install anything else you need
 USER vscode
