@@ -11,6 +11,8 @@ module "cd" {
   bootstrap_repository = var.bootstrap_repository
   bootstrap_chart = var.bootstrap_chart
   bootstrap_version = var.bootstrap_version
+  
+  hostname = var.hostname
 }
 
 module "environment" {

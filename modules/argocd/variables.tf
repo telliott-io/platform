@@ -11,3 +11,5 @@ variable bootstrap_version {
 }
 
 variable argocd_admin_password {}
+
+variable hostname {}
