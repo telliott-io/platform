@@ -6,4 +6,9 @@ resource "helm_release" "bootstrap" {
   chart      = var.bootstrap_chart
   namespace  = "argocd"
   version    = var.bootstrap_version
+
+  set {
+    name = "domain"
+    value = var.hostname
+  }
 }
